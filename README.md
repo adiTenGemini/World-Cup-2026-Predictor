@@ -1,6 +1,6 @@
 # World Cup 2026 Predictor
 
-A Flask web app for exploring 2026 FIFA World Cup group-stage predictions. The app combines FIFA ranking points with historical international match results to create team ratings and display the groups in an interactive browser interface.
+A Flask web app for exploring 2026 FIFA World Cup group-stage predictions. The app combines FIFA ranking points with historical international match results to create team ratings and display the groups in an interactive browser interface. The app can be explored here - <a href="https://world-cup-2026-predictor-3cf6.onrender.com/">Explore World Cup Predictor</a>
 
 <img src="https://cdn.prod.website-files.com/689fd0a66c26ce8fe1446c25/69d95f4c71d00684ba1d8e76_FWC26_Ecomm_Photo_Update_B_1000x720-p-800.webp" style="display: block; margin: 0 auto;">
 
