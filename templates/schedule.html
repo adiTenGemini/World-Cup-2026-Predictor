@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>World Cup 2026 Schedule</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="Site header">
+      <a class="brand brand-lockup" href="{{ url_for('index') }}" aria-label="World Cup 2026 Predictor home">
+        <img
+          src="{{ logo_url }}"
+          alt=""
+          class="brand-logo"
+        />
+        <span>World Cup 2026 Predictor</span>
+      </a>
+      <nav class="view-toggle" aria-label="Switch predictor view">
+        <a href="{{ url_for('index') }}">Full</a>
+        <a href="{{ url_for('guided') }}">Guided</a>
+        <a href="{{ url_for('schedule') }}" aria-current="page">Schedule</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="schedule-hero" aria-labelledby="schedule-title">
+        <img
+          src="{{ logo_url }}"
+          alt="FIFA World Cup 2026 logo"
+          class="hero-logo"
+        />
+        <p class="kicker">104 matches</p>
+        <h1 id="schedule-title">Tournament schedule</h1>
+      </section>
+
+      <section class="schedule-shell panel" aria-labelledby="schedule-list-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Fixtures</p>
+            <h2 id="schedule-list-title">Full match list</h2>
+          </div>
+          <p id="schedule-count" class="schedule-count"></p>
+        </div>
+
+        <form class="schedule-filters" aria-label="Schedule filters">
+          <label>
+            <span>Stage</span>
+            <select id="stage-filter">
+              <option value="">All stages</option>
+            </select>
+          </label>
+          <label>
+            <span>Group</span>
+            <select id="group-filter">
+              <option value="">All groups</option>
+            </select>
+          </label>
+          <label>
+            <span>Venue</span>
+            <select id="venue-filter">
+              <option value="">All venues</option>
+            </select>
+          </label>
+          <label class="search-filter">
+            <span>Search</span>
+            <input id="schedule-search" type="search" placeholder="Team, city, match..." />
+          </label>
+          <button id="clear-schedule-filters" class="ghost-button" type="button">Clear</button>
+        </form>
+
+        <div class="schedule-table-wrap">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>Match</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Stage</th>
+                <th>Fixture</th>
+                <th>Venue</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      window.MATCH_SCHEDULE = {{ schedule | tojson }};
+      window.SCHEDULE_FLAGS = {{ schedule_flags | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='schedule.js') }}"></script>
+  </body>
+</html>

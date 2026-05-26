@@ -8,6 +8,7 @@ A Flask web app for exploring 2026 FIFA World Cup group-stage predictions. The a
 
 - View all 12 World Cup 2026 groups with team flags and ratings.
 - Explore a guided prediction flow at `/guided`.
+- Browse the full 104-match schedule at `/schedule` with filters.
 - Build ratings from historical results, shootouts, former team names, and FIFA ranking points.
 - Refresh FIFA ranking data from FIFA's men's world ranking page.
 
@@ -17,6 +18,7 @@ A Flask web app for exploring 2026 FIFA World Cup group-stage predictions. The a
 .
 |-- app.py                         # Flask routes and World Cup group data
 |-- match_model.py                 # Rating, probability, and data-loading logic
+|-- schedule_data.py               # Full World Cup 2026 match schedule
 |-- update_fifa_rankings.py        # Script to refresh FIFA ranking points
 |-- requirements.txt               # Python dependencies
 |-- data/                          # Match results, shootouts, names, rankings, archive
@@ -59,6 +61,7 @@ Then open:
 
 - `http://127.0.0.1:5000/`
 - `http://127.0.0.1:5000/guided`
+- `http://127.0.0.1:5000/schedule`
 
 ## Refresh FIFA Rankings
 

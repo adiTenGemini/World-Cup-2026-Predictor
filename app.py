@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 
 from match_model import build_team_ratings
+from schedule_data import MATCH_SCHEDULE
 
 app = Flask(__name__)
 
@@ -188,6 +189,30 @@ def groups_with_flags():
     return groups
 
 
+def schedule_flag_lookup():
+    lookup = {}
+    aliases = {
+        "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+        "Cape Verde": "Cabo Verde",
+        "Curacao": "Curacao",
+        "Czech Republic": "Czechia",
+        "DR Congo": "Congo DR",
+        "Iran": "IR Iran",
+        "Ivory Coast": "Cote d'Ivoire",
+        "South Korea": "Korea Republic",
+        "Turkey": "Turkiye",
+        "United States": "USA",
+    }
+    for group in WORLD_CUP_GROUPS:
+        for team in group["teams"]:
+            flag_code = FLAG_CODES[team["code"]]
+            lookup[team["name"]] = f"https://flagcdn.com/w40/{flag_code}.png"
+    for alias, canonical in aliases.items():
+        if canonical in lookup:
+            lookup[alias] = lookup[canonical]
+    return lookup
+
+
 @app.get("/")
 def index():
     return render_template("index.html", groups=groups_with_flags(), logo_url=LOGO_URL)
@@ -196,6 +221,16 @@ def index():
 @app.get("/guided")
 def guided():
     return render_template("guided.html", groups=groups_with_flags(), logo_url=LOGO_URL)
+
+
+@app.get("/schedule")
+def schedule():
+    return render_template(
+        "schedule.html",
+        schedule=MATCH_SCHEDULE,
+        schedule_flags=schedule_flag_lookup(),
+        logo_url=LOGO_URL,
+    )
 
 
 if __name__ == "__main__":
