@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>World Cup 2026 Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="Site header">
+      <a class="brand brand-lockup" href="{{ url_for('index') }}" aria-label="World Cup 2026 Predictor home">
+        <img
+          src="{{ logo_url }}"
+          alt=""
+          class="brand-logo"
+        />
+        <span>World Cup 2026 Predictor</span>
+      </a>
+      <nav class="view-toggle" aria-label="Switch predictor view">
+        <a href="{{ url_for('index') }}" aria-current="page">Full</a>
+        <a href="{{ url_for('guided') }}">Guided</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero__overlay">
+          <img
+            src="{{ logo_url }}"
+            alt="FIFA World Cup 2026 logo"
+            class="hero-logo"
+          />
+          <p class="kicker">Canada &middot; Mexico &middot; United States</p>
+          <h1 id="page-title">Predict the path to 2026 glory</h1>
+          <p>
+            Drag teams into first and second place, then play each knockout tie
+            through to the final.
+          </p>
+        </div>
+      </section>
+
+      <section class="notice" aria-label="Format note">
+        <strong>Format note:</strong> the official FIFA World Cup 2026 format
+        advances the top two teams from each group plus eight third-place teams.
+        This predictor uses your ordered groups to create a Round of 32 tree.
+      </section>
+
+      <section class="workspace">
+        <section id="groups" class="panel groups-panel" aria-labelledby="groups-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Group stage</p>
+              <h2 id="groups-title">Drag your top two from each group</h2>
+            </div>
+            <button id="reset-button" class="ghost-button" type="button">Reset</button>
+          </div>
+          <div id="groups-grid" class="groups-grid"></div>
+        </section>
+
+        <section id="bracket" class="panel bracket-panel" aria-labelledby="bracket-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Knockout tree</p>
+              <h2 id="bracket-title">Knockout bracket</h2>
+            </div>
+            <p class="bracket-hint">
+              Scroll right for full bracket &rarr; Click a team to advance them.
+              Probabilities use a recency-weighted Elo model.
+            </p>
+          </div>
+          <div id="bracket-view" class="bracket-view"></div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      window.WORLD_CUP_GROUPS = {{ groups | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

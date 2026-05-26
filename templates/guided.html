@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guided World Cup 2026 Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="Site header">
+      <a class="brand brand-lockup" href="{{ url_for('index') }}" aria-label="World Cup 2026 Predictor home">
+        <img
+          src="{{ logo_url }}"
+          alt=""
+          class="brand-logo"
+        />
+        <span>World Cup 2026 Predictor</span>
+      </a>
+      <nav class="view-toggle" aria-label="Switch predictor view">
+        <a href="{{ url_for('index') }}">Full</a>
+        <a href="{{ url_for('guided') }}" aria-current="page">Guided</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="guided-hero" aria-labelledby="guided-title">
+        <img
+          src="{{ logo_url }}"
+          alt="FIFA World Cup 2026 logo"
+          class="hero-logo"
+        />
+        <p class="kicker">Step-by-step mode</p>
+        <h1 id="guided-title">Complete one stage at a time</h1>
+        <p>
+          Rank each group, choose the eight best third-place teams, then pick
+          winners round by round until the champion is decided. Knockout
+          probabilities use a recency-weighted Elo model.
+        </p>
+      </section>
+
+      <section class="guided-shell">
+        <aside class="stepper" aria-label="Prediction steps">
+          <ol id="stepper-list"></ol>
+        </aside>
+
+        <section class="panel guided-panel" aria-live="polite">
+          <div class="section-heading">
+            <div>
+              <p id="guided-kicker" class="eyebrow"></p>
+              <h2 id="guided-heading"></h2>
+            </div>
+            <button id="guided-reset" class="ghost-button" type="button">Reset</button>
+          </div>
+
+          <div id="guided-content"></div>
+
+          <footer class="guided-actions">
+            <button id="back-step" class="ghost-button" type="button">Back</button>
+            <p id="step-message" class="step-message"></p>
+            <button id="next-step" class="primary-button" type="button">Next</button>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      window.WORLD_CUP_GROUPS = {{ groups | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='guided.js') }}"></script>
+  </body>
+</html>
