@@ -30,6 +30,7 @@ const stepMessage = document.querySelector("#step-message");
 const backStep = document.querySelector("#back-step");
 const nextStep = document.querySelector("#next-step");
 const guidedReset = document.querySelector("#guided-reset");
+const guidedSimulate = document.querySelector("#guided-simulate");
 
 function teamId(team) {
   return team.code;
@@ -49,6 +50,58 @@ function renderTeam(team) {
 function winProbability(team, opponent) {
   if (!team || !opponent) return null;
   return 1 / (1 + Math.pow(10, (opponent.rating - team.rating) / 400));
+}
+
+function predictedWinner(team, opponent) {
+  if (!team) return opponent;
+  if (!opponent) return team;
+  return winProbability(team, opponent) >= 0.5 ? team : opponent;
+}
+
+function simulateGroup(group) {
+  const standings = [...group.teams]
+    .map((team) => ({
+      team,
+      score: group.teams.reduce((total, opponent) => {
+        if (opponent.code === team.code) return total;
+        return total + winProbability(team, opponent);
+      }, 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.team);
+  groupState.set(group.id, standings);
+}
+
+function simulateThirdPlaceOrder() {
+  thirdPlaceOrder = getQualifiers()
+    .map((item) => item.third)
+    .map((team) => ({
+      team,
+      score: team.rating,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.team);
+}
+
+function simulateAll() {
+  groups.forEach(simulateGroup);
+  thirdPlaceOrder = [];
+  simulateThirdPlaceOrder();
+  simulateKnockout();
+  currentStep = steps.length - 1;
+  render();
+}
+
+function simulateKnockout() {
+  getThirdPlaceTeams();
+  resetWinners();
+
+  ["round32", "round16", "quarterfinal", "semifinal", "final"].forEach((roundKey) => {
+    const round = getBracketRounds()[roundKey];
+    round.matches.forEach((match, index) => {
+      winners[roundKey][index] = predictedWinner(match[0], match[1]);
+    });
+  });
 }
 
 function renderProbability(team, opponent) {
@@ -438,4 +491,5 @@ guidedReset.addEventListener("click", () => {
   render();
 });
 
+guidedSimulate.addEventListener("click", simulateAll);
 render();

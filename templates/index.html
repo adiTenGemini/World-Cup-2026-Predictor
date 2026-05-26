@@ -59,7 +59,10 @@
               <p class="eyebrow">Group stage</p>
               <h2 id="groups-title">Drag your top two from each group</h2>
             </div>
-            <button id="reset-button" class="ghost-button" type="button">Reset</button>
+            <div class="button-row">
+              <button id="simulate-button" class="primary-button" type="button">Simulate all</button>
+              <button id="reset-button" class="ghost-button" type="button">Reset</button>
+            </div>
           </div>
           <div id="groups-grid" class="groups-grid"></div>
         </section>
@@ -70,10 +73,13 @@
               <p class="eyebrow">Knockout tree</p>
               <h2 id="bracket-title">Knockout bracket</h2>
             </div>
-            <p class="bracket-hint">
-              Scroll right for full bracket &rarr; Click a team to advance them.
-              Probabilities use a recency-weighted Elo model.
-            </p>
+            <div class="bracket-tools">
+              <button id="simulate-knockout-button" class="primary-button" type="button">Simulate knockout</button>
+              <p class="bracket-hint">
+                Scroll right for full bracket &rarr; Click a team to advance them.
+                Probabilities use a recency-weighted Elo model.
+              </p>
+            </div>
           </div>
           <div id="bracket-view" class="bracket-view"></div>
         </section>

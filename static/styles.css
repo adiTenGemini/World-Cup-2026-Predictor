@@ -231,6 +231,13 @@ h1 {
   font-size: clamp(1.25rem, 2vw, 1.8rem);
 }
 
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
 .bracket-hint {
   max-width: 280px;
   margin: 0.25rem 0 0;
@@ -239,6 +246,12 @@ h1 {
   font-weight: 700;
   line-height: 1.4;
   text-align: right;
+}
+
+.bracket-tools {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
 }
 
 .ghost-button {
