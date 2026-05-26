@@ -68,6 +68,14 @@ textarea {
   text-decoration: none;
 }
 
+.brand-lockup span {
+  font-family: "Climate Crisis", Inter, system-ui, sans-serif;
+  font-size: 0.96rem;
+  font-weight: 400;
+  font-variation-settings: "YEAR" 1979;
+  line-height: 1.15;
+}
+
 .brand-logo {
   width: 34px;
   height: 42px;
@@ -81,7 +89,39 @@ textarea {
   gap: 0.5rem;
 }
 
-.topbar a,
+.github-link {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(22, 32, 47, 0.16);
+  border-radius: 999px;
+  color: #5f6673;
+  background: rgba(255, 255, 255, 0.7);
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.github-link:hover,
+.github-link:focus-visible {
+  border-color: var(--gold);
+  color: #101010;
+  background: linear-gradient(135deg, rgba(209, 164, 58, 0.92), #fff4c7);
+  box-shadow: 0 8px 22px rgba(209, 164, 58, 0.26);
+  transform: translateY(-1px);
+}
+
+.github-link svg {
+  width: 22px;
+  height: 22px;
+}
+
+.topbar a:not(.github-link),
 .ghost-button {
   min-height: 36px;
   padding: 0.48rem 0.8rem;
@@ -92,13 +132,13 @@ textarea {
   font-weight: 700;
 }
 
-.topbar a:hover,
+.topbar a:not(.github-link):hover,
 .ghost-button:hover {
   border-color: var(--gold-line-strong);
   background: #fff;
 }
 
-.topbar a[aria-current="page"] {
+.topbar a:not(.github-link)[aria-current="page"] {
   border-color: rgba(8, 124, 114, 0.28);
   background: rgba(8, 124, 114, 0.1);
 }
@@ -116,7 +156,7 @@ textarea {
   text-align: center;
 }
 
-.view-toggle a[aria-current="page"] {
+.topbar .view-toggle a[aria-current="page"] {
   border-color: var(--teal);
   color: #fff;
   background: var(--teal);
@@ -947,6 +987,12 @@ h1 {
   .view-toggle a {
     min-width: 0;
     flex: 1;
+  }
+
+  .github-link {
+    position: absolute;
+    top: 0.85rem;
+    right: clamp(1rem, 4vw, 3rem);
   }
 
   .groups-grid {
