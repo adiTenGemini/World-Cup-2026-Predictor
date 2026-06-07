@@ -1,4 +1,6 @@
 const groups = window.WORLD_CUP_GROUPS;
+const matchSchedule = window.MATCH_SCHEDULE || [];
+const scheduleByMatch = new Map(matchSchedule.map((match) => [match.match, match]));
 const groupState = new Map(groups.map((group) => [group.id, [...group.teams]]));
 let thirdPlaceOrder = [];
 const winners = {
@@ -31,6 +33,31 @@ const backStep = document.querySelector("#back-step");
 const nextStep = document.querySelector("#next-step");
 const guidedReset = document.querySelector("#guided-reset");
 const guidedSimulate = document.querySelector("#guided-simulate");
+const guidedExportCsv = document.querySelector("#guided-export-csv");
+const teamAliases = {
+  "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+  "Cape Verde": "Cabo Verde",
+  "Czech Republic": "Czechia",
+  "DR Congo": "Congo DR",
+  Iran: "IR Iran",
+  "Ivory Coast": "Cote d'Ivoire",
+  "South Korea": "Korea Republic",
+  Turkey: "Turkiye",
+  "United States": "USA",
+};
+const teamsByName = new Map();
+
+groups.forEach((group) => {
+  group.teams.forEach((team) => {
+    teamsByName.set(team.name, team);
+  });
+});
+
+Object.entries(teamAliases).forEach(([alias, canonical]) => {
+  if (teamsByName.has(canonical)) {
+    teamsByName.set(alias, teamsByName.get(canonical));
+  }
+});
 
 function teamId(team) {
   return team.code;
@@ -108,6 +135,169 @@ function renderProbability(team, opponent) {
   const probability = winProbability(team, opponent);
   if (probability === null) return "";
   return `<span class="probability">${Math.round(probability * 100)}%</span>`;
+}
+
+function predictedScore(team, opponent, winner = null) {
+  if (!team || !opponent) {
+    return { teamGoals: "", opponentGoals: "", result: "" };
+  }
+
+  const teamExpectedGoals = Math.max(0.15, 1.35 + (team.rating - opponent.rating) / 520);
+  const opponentExpectedGoals = Math.max(0.15, 1.35 - (team.rating - opponent.rating) / 520);
+  let teamGoals = Math.max(0, Math.round(teamExpectedGoals));
+  let opponentGoals = Math.max(0, Math.round(opponentExpectedGoals));
+
+  if (!winner) {
+    return {
+      teamGoals,
+      opponentGoals,
+      result: `${teamGoals}-${opponentGoals}`,
+    };
+  }
+
+  if (teamGoals === opponentGoals) {
+    if (winner.code === team.code) teamGoals += 1;
+    if (winner.code === opponent.code) opponentGoals += 1;
+  } else if (winner.code === team.code && teamGoals < opponentGoals) {
+    teamGoals = opponentGoals + 1;
+  } else if (winner.code === opponent.code && opponentGoals < teamGoals) {
+    opponentGoals = teamGoals + 1;
+  }
+
+  return {
+    teamGoals,
+    opponentGoals,
+    result: `${teamGoals}-${opponentGoals}`,
+  };
+}
+
+function csvEscape(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  if (/[",\r\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
+  return text;
+}
+
+function matchOutcome(team, opponent, score, selectedWinner = null) {
+  if (selectedWinner) return selectedWinner.name;
+  if (score.teamGoals === "" || score.opponentGoals === "") return "";
+  if (score.teamGoals > score.opponentGoals) return team.name;
+  if (score.teamGoals < score.opponentGoals) return opponent.name;
+  return "Draw";
+}
+
+function buildMatchRow({ matchNumber, stage, team, opponent, selectedWinner = null }) {
+  const schedule = scheduleByMatch.get(matchNumber) || {};
+  const probability = winProbability(team, opponent);
+  const score = predictedScore(team, opponent, selectedWinner);
+  const outcome = matchOutcome(team, opponent, score, selectedWinner);
+  const winnerProbability =
+    probability === null || !selectedWinner
+      ? ""
+      : selectedWinner.code === team.code
+        ? probability
+        : 1 - probability;
+
+  return {
+    match_number: matchNumber,
+    stage: stage || schedule.stage || "",
+    match_date: schedule.date || "",
+    match_time: schedule.time || "",
+    venue: schedule.venue || "",
+    team_1: team?.name || schedule.team1 || "",
+    team_2: opponent?.name || schedule.team2 || "",
+    team_1_win_probability: probability === null ? "" : `${(probability * 100).toFixed(1)}%`,
+    team_2_win_probability: probability === null ? "" : `${((1 - probability) * 100).toFixed(1)}%`,
+    predicted_winner: outcome,
+    winner_probability: winnerProbability === "" ? "" : `${(winnerProbability * 100).toFixed(1)}%`,
+    result: score.result,
+    team_1_goals: score.teamGoals,
+    team_2_goals: score.opponentGoals,
+  };
+}
+
+function buildGroupStageExportRows() {
+  return matchSchedule
+    .filter((match) => match.match <= 72)
+    .map((match) =>
+      buildMatchRow({
+        matchNumber: match.match,
+        stage: match.stage,
+        team: teamsByName.get(match.team1),
+        opponent: teamsByName.get(match.team2),
+      }),
+    );
+}
+
+function buildKnockoutExportRows() {
+  const rounds = getBracketRounds();
+  const rows = ["round32", "round16", "quarterfinal", "semifinal", "final"].flatMap((roundKey) =>
+    rounds[roundKey].matches.map((match, matchIndex) =>
+      buildMatchRow({
+        matchNumber: rounds[roundKey].matchStart + matchIndex,
+        stage: rounds[roundKey].title,
+        team: match[0],
+        opponent: match[1],
+        selectedWinner: winners[roundKey][matchIndex] || null,
+      }),
+    ),
+  );
+  const thirdPlaceTeams = rounds.semifinal.matches.map((match, index) => {
+    const winner = winners.semifinal[index];
+    return match.find((team) => team && team.code !== winner?.code) || null;
+  });
+  rows.push(
+    buildMatchRow({
+      matchNumber: 103,
+      stage: "Third Place",
+      team: thirdPlaceTeams[0],
+      opponent: thirdPlaceTeams[1],
+      selectedWinner:
+        thirdPlaceTeams[0] && thirdPlaceTeams[1]
+          ? predictedWinner(thirdPlaceTeams[0], thirdPlaceTeams[1])
+          : null,
+    }),
+  );
+  return rows.sort((a, b) => a.match_number - b.match_number);
+}
+
+function buildExportRows() {
+  return [...buildGroupStageExportRows(), ...buildKnockoutExportRows()];
+}
+
+function downloadCsv(rows) {
+  const columns = [
+    "match_number",
+    "stage",
+    "match_date",
+    "match_time",
+    "venue",
+    "team_1",
+    "team_2",
+    "team_1_win_probability",
+    "team_2_win_probability",
+    "predicted_winner",
+    "winner_probability",
+    "result",
+    "team_1_goals",
+    "team_2_goals",
+  ];
+  const csv = [
+    columns.join(","),
+    ...rows.map((row) => columns.map((column) => csvEscape(row[column])).join(",")),
+  ].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `world-cup-2026-simulation-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportCurrentSimulation() {
+  downloadCsv(buildExportRows());
 }
 
 function getQualifiers() {
@@ -492,4 +682,5 @@ guidedReset.addEventListener("click", () => {
 });
 
 guidedSimulate.addEventListener("click", simulateAll);
+guidedExportCsv.addEventListener("click", exportCurrentSimulation);
 render();

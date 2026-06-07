@@ -215,12 +215,22 @@ def schedule_flag_lookup():
 
 @app.get("/")
 def index():
-    return render_template("index.html", groups=groups_with_flags(), logo_url=LOGO_URL)
+    return render_template(
+        "index.html",
+        groups=groups_with_flags(),
+        schedule=MATCH_SCHEDULE,
+        logo_url=LOGO_URL,
+    )
 
 
 @app.get("/guided")
 def guided():
-    return render_template("guided.html", groups=groups_with_flags(), logo_url=LOGO_URL)
+    return render_template(
+        "guided.html",
+        groups=groups_with_flags(),
+        schedule=MATCH_SCHEDULE,
+        logo_url=LOGO_URL,
+    )
 
 
 @app.get("/schedule")
