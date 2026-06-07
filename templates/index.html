@@ -93,7 +93,10 @@
               <h2 id="bracket-title">Knockout bracket</h2>
             </div>
             <div class="bracket-tools">
-              <button id="simulate-knockout-button" class="primary-button" type="button">Simulate knockout</button>
+              <div class="button-row">
+                <button id="simulate-knockout-button" class="primary-button" type="button">Simulate knockout</button>
+                <button id="export-csv-button" class="ghost-button" type="button">Export CSV</button>
+              </div>
               <p class="bracket-hint">
                 Scroll right for full bracket &rarr; Click a team to advance them.
                 Probabilities use a recency-weighted Elo model.
@@ -107,6 +110,7 @@
 
     <script>
       window.WORLD_CUP_GROUPS = {{ groups | tojson }};
+      window.MATCH_SCHEDULE = {{ schedule | tojson }};
     </script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
