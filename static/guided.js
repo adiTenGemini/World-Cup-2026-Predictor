@@ -86,15 +86,27 @@ function predictedWinner(team, opponent) {
 }
 
 function simulateGroup(group) {
+  const points = new Map(group.teams.map((team) => [team.code, 0]));
+  matchSchedule
+    .filter((match) => match.stage === "Group Stage" && match.group === group.id)
+    .forEach((match) => {
+      const team = teamsByName.get(match.team1);
+      const opponent = teamsByName.get(match.team2);
+      const score = scoreForMatch(match.match, team, opponent);
+      if (!team || !opponent) return;
+      if (score.teamGoals > score.opponentGoals) points.set(team.code, points.get(team.code) + 3);
+      else if (score.teamGoals < score.opponentGoals) points.set(opponent.code, points.get(opponent.code) + 3);
+      else {
+        points.set(team.code, points.get(team.code) + 1);
+        points.set(opponent.code, points.get(opponent.code) + 1);
+      }
+    });
   const standings = [...group.teams]
     .map((team) => ({
       team,
-      score: group.teams.reduce((total, opponent) => {
-        if (opponent.code === team.code) return total;
-        return total + winProbability(team, opponent);
-      }, 0),
+      score: points.get(team.code),
     }))
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score || b.team.rating - a.team.rating)
     .map((item) => item.team);
   groupState.set(group.id, standings);
 }
@@ -171,6 +183,17 @@ function predictedScore(team, opponent, winner = null) {
   };
 }
 
+function scoreForMatch(matchNumber, team, opponent, winner = null) {
+  const match = scheduleByMatch.get(matchNumber);
+  if (match?.result_source === "actual") {
+    const sameOrder = teamsByName.get(match.team1)?.code === team?.code;
+    const teamGoals = sameOrder ? match.actual_team1_goals : match.actual_team2_goals;
+    const opponentGoals = sameOrder ? match.actual_team2_goals : match.actual_team1_goals;
+    return { teamGoals, opponentGoals, result: `${teamGoals}-${opponentGoals}`, source: "actual" };
+  }
+  return { ...predictedScore(team, opponent, winner), source: "model" };
+}
+
 function csvEscape(value) {
   const text = value === null || value === undefined ? "" : String(value);
   if (/[",\r\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
@@ -188,7 +211,7 @@ function matchOutcome(team, opponent, score, selectedWinner = null) {
 function buildMatchRow({ matchNumber, stage, team, opponent, selectedWinner = null }) {
   const schedule = scheduleByMatch.get(matchNumber) || {};
   const probability = winProbability(team, opponent);
-  const score = predictedScore(team, opponent, selectedWinner);
+  const score = scoreForMatch(matchNumber, team, opponent, selectedWinner);
   const outcome = matchOutcome(team, opponent, score, selectedWinner);
   const winnerProbability =
     probability === null || !selectedWinner
@@ -209,6 +232,7 @@ function buildMatchRow({ matchNumber, stage, team, opponent, selectedWinner = nu
     team_2_win_probability: probability === null ? "" : `${((1 - probability) * 100).toFixed(1)}%`,
     predicted_winner: outcome,
     winner_probability: winnerProbability === "" ? "" : `${(winnerProbability * 100).toFixed(1)}%`,
+    result_source: score.source,
     result: score.result,
     team_1_goals: score.teamGoals,
     team_2_goals: score.opponentGoals,
@@ -277,6 +301,7 @@ function downloadCsv(rows) {
     "team_2_win_probability",
     "predicted_winner",
     "winner_probability",
+    "result_source",
     "result",
     "team_1_goals",
     "team_2_goals",

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>World Cup 2026 Results</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="Site header">
+      <a class="brand brand-lockup" href="{{ url_for('index') }}" aria-label="World Cup 2026 Predictor home">
+        <img src="{{ logo_url }}" alt="" class="brand-logo" />
+        <span>World Cup 2026 Predictor</span>
+      </a>
+      <nav class="view-toggle" aria-label="Switch predictor view">
+        <a href="{{ url_for('index') }}">Full</a>
+        <a href="{{ url_for('guided') }}">Guided</a>
+        <a href="{{ url_for('schedule') }}">Schedule</a>
+        <a href="{{ url_for('results') }}" aria-current="page">Results</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="schedule-hero" aria-labelledby="results-title">
+        <img src="{{ logo_url }}" alt="FIFA World Cup 2026 logo" class="hero-logo" />
+        <p class="kicker">Actual + predicted</p>
+        <h1 id="results-title">Tournament results</h1>
+      </section>
+
+      <section class="schedule-shell panel" aria-labelledby="results-list-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">All fixtures</p>
+            <h2 id="results-list-title">Scores and predictions</h2>
+          </div>
+          <p id="results-count" class="schedule-count"></p>
+        </div>
+        <p class="results-note">
+          Finished scores are sourced from
+          <a href="https://www.fotmob.com/leagues/77/fixtures/world-cup?group=by-date&page=0" target="_blank" rel="noreferrer">FotMob</a>.
+          Unplayed matches use the rating model when both teams are known.
+        </p>
+
+        <form class="schedule-filters" aria-label="Results filters">
+          <label><span>Stage</span><select id="results-stage"><option value="">All stages</option></select></label>
+          <label><span>Group</span><select id="results-group"><option value="">All groups</option></select></label>
+          <label><span>Source</span><select id="results-source"><option value="">Actual and model</option><option value="actual">Actual</option><option value="model">Model</option><option value="pending">Awaiting teams</option></select></label>
+          <label class="search-filter"><span>Search</span><input id="results-search" type="search" placeholder="Team, stage, match..." /></label>
+          <button id="clear-results-filters" class="ghost-button" type="button">Clear</button>
+        </form>
+
+        <div class="schedule-table-wrap">
+          <table class="schedule-table">
+            <thead><tr><th>Match</th><th>Date</th><th>Stage</th><th>Fixture</th><th>Score</th><th>Source</th></tr></thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script>
+      window.MATCH_SCHEDULE = {{ schedule | tojson }};
+      window.WORLD_CUP_GROUPS = {{ groups | tojson }};
+      window.SCHEDULE_FLAGS = {{ schedule_flags | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='results.js') }}"></script>
+  </body>
+</html>

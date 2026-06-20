@@ -79,22 +79,91 @@ function predictedWinner(team, opponent) {
   return winProbability(team, opponent) >= 0.5 ? team : opponent;
 }
 
+function calculateGroupTable(group) {
+  const table = new Map(
+    group.teams.map((team) => [
+      team.code,
+      { team, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 },
+    ]),
+  );
+  matchSchedule
+    .filter((match) => match.stage === "Group Stage" && match.group === group.id)
+    .forEach((match) => {
+      const team = teamsByName.get(match.team1);
+      const opponent = teamsByName.get(match.team2);
+      if (!team || !opponent) return;
+      const score = scoreForMatch(match.match, team, opponent);
+      const home = table.get(team.code);
+      const away = table.get(opponent.code);
+      home.played += 1;
+      away.played += 1;
+      home.gf += score.teamGoals;
+      home.ga += score.opponentGoals;
+      away.gf += score.opponentGoals;
+      away.ga += score.teamGoals;
+      if (score.teamGoals > score.opponentGoals) {
+        home.won += 1;
+        away.lost += 1;
+        home.points += 3;
+      } else if (score.teamGoals < score.opponentGoals) {
+        away.won += 1;
+        home.lost += 1;
+        away.points += 3;
+      } else {
+        home.drawn += 1;
+        away.drawn += 1;
+        home.points += 1;
+        away.points += 1;
+      }
+    });
+
+  return [...table.values()]
+    .map((row) => ({ ...row, gd: row.gf - row.ga }))
+    .sort(
+      (a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf || b.team.rating - a.team.rating,
+    );
+}
+
+function renderGroupTable(group) {
+  const rows = calculateGroupTable(group);
+  return `
+    <div class="standings-popover" role="tooltip">
+      <div class="standings-popover__title">Projected final table</div>
+      <div class="standings-popover__scroll">
+        <table class="mini-standings">
+          <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+          <tbody>
+            ${rows
+              .map(
+                (row, index) => `
+                  <tr>
+                    <td>${index + 1}</td><td>${row.team.code}</td><td>${row.played}</td><td>${row.won}</td>
+                    <td>${row.drawn}</td><td>${row.lost}</td><td>${row.gf}</td><td>${row.ga}</td>
+                    <td>${row.gd > 0 ? "+" : ""}${row.gd}</td><td><strong>${row.points}</strong></td>
+                  </tr>`,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <p>Actual results + model predictions for remaining matches</p>
+    </div>`;
+}
+
 function simulateGroup(group) {
-  const standings = [...group.teams]
-    .map((team) => ({
-      team,
-      score: group.teams.reduce((total, opponent) => {
-        if (opponent.code === team.code) return total;
-        return total + winProbability(team, opponent);
-      }, 0),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((item) => item.team);
-  groupState.set(group.id, standings);
+  groupState.set(
+    group.id,
+    calculateGroupTable(group).map((row) => row.team),
+  );
+}
+
+function applyProjectedGroupOrder() {
+  groups.forEach(simulateGroup);
 }
 
 function simulateAll() {
-  groups.forEach(simulateGroup);
+  applyProjectedGroupOrder();
   resetWinners();
   completeKnockoutSimulation();
   renderGroups();
@@ -153,6 +222,17 @@ function predictedScore(team, opponent, winner = null) {
   };
 }
 
+function scoreForMatch(matchNumber, team, opponent, winner = null) {
+  const match = scheduleByMatch.get(matchNumber);
+  if (match?.result_source === "actual") {
+    const sameOrder = teamsByName.get(match.team1)?.code === team?.code;
+    const teamGoals = sameOrder ? match.actual_team1_goals : match.actual_team2_goals;
+    const opponentGoals = sameOrder ? match.actual_team2_goals : match.actual_team1_goals;
+    return { teamGoals, opponentGoals, result: `${teamGoals}-${opponentGoals}`, source: "actual" };
+  }
+  return { ...predictedScore(team, opponent, winner), source: "model" };
+}
+
 function csvEscape(value) {
   const text = value === null || value === undefined ? "" : String(value);
   if (/[",\r\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
@@ -170,7 +250,7 @@ function matchOutcome(team, opponent, score, selectedWinner = null) {
 function buildMatchRow({ matchNumber, stage, team, opponent, selectedWinner = null }) {
   const schedule = scheduleByMatch.get(matchNumber) || {};
   const probability = winProbability(team, opponent);
-  const score = predictedScore(team, opponent, selectedWinner);
+  const score = scoreForMatch(matchNumber, team, opponent, selectedWinner);
   const outcome = matchOutcome(team, opponent, score, selectedWinner);
   const winnerProbability =
     probability === null || !selectedWinner
@@ -191,6 +271,7 @@ function buildMatchRow({ matchNumber, stage, team, opponent, selectedWinner = nu
     team_2_win_probability: probability === null ? "" : `${((1 - probability) * 100).toFixed(1)}%`,
     predicted_winner: outcome,
     winner_probability: winnerProbability === "" ? "" : `${(winnerProbability * 100).toFixed(1)}%`,
+    result_source: score.source,
     result: score.result,
     team_1_goals: score.teamGoals,
     team_2_goals: score.opponentGoals,
@@ -260,6 +341,7 @@ function downloadCsv(rows) {
     "team_2_win_probability",
     "predicted_winner",
     "winner_probability",
+    "result_source",
     "result",
     "team_1_goals",
     "team_2_goals",
@@ -289,9 +371,10 @@ function renderGroups() {
       const standings = groupState.get(group.id);
       return `
         <article class="group-card">
-          <div class="group-card__head">
+          <div class="group-card__head" tabindex="0" aria-label="Group ${group.id}: show projected final table">
             <h3>Group ${group.id}</h3>
             <span class="status-pill">${standings[0].code} &middot; ${standings[1].code}</span>
+            ${renderGroupTable(group)}
           </div>
           <div class="team-list" data-group="${group.id}" aria-label="Group ${group.id} standings">
             ${standings
@@ -540,7 +623,7 @@ function clearDependentWinners(round) {
 }
 
 resetButton.addEventListener("click", () => {
-  groups.forEach((group) => groupState.set(group.id, [...group.teams]));
+  applyProjectedGroupOrder();
   resetWinners();
   renderGroups();
   renderBracket();
@@ -553,5 +636,6 @@ simulateKnockoutButton.addEventListener("click", () => {
 });
 exportCsvButton.addEventListener("click", exportCurrentSimulation);
 
+applyProjectedGroupOrder();
 renderGroups();
 renderBracket();

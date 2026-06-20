@@ -9,6 +9,7 @@ A Flask web app for exploring 2026 FIFA World Cup group-stage predictions. The a
 - View all 12 World Cup 2026 groups with team flags and ratings.
 - Explore a guided prediction flow at `/guided`.
 - Browse the full 104-match schedule at `/schedule` with filters.
+- View final scores and model predictions for every fixture at `/results`.
 - Build ratings from historical results, shootouts, former team names, and FIFA ranking points.
 - Refresh FIFA ranking data from FIFA's men's world ranking page.
 
@@ -69,6 +70,12 @@ To fetch the latest FIFA ranking points used by the model:
 
 ```bash
 python update_fifa_rankings.py
+```
+
+Refresh completed 2026 World Cup scores from FotMob:
+
+```bash
+python update_world_cup_results.py
 ```
 
 This writes `data/fifa_rankings.csv`. If that file is not present, the model falls back to the ranking points embedded in `match_model.py`.

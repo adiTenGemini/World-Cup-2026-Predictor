@@ -79,7 +79,7 @@ function renderSchedule() {
   if (!matches.length) {
     scheduleBody.innerHTML = `
       <tr>
-        <td class="empty-schedule" colspan="6">No matches found.</td>
+        <td class="empty-schedule" colspan="7">No matches found.</td>
       </tr>
     `;
     return;
@@ -100,11 +100,24 @@ function renderSchedule() {
             <span>vs</span>
             ${renderFixtureTeam(match.team2)}
           </td>
+          <td>${renderMatchResult(match)}</td>
           <td>${match.venue}</td>
         </tr>
       `,
     )
     .join("");
+}
+
+function renderMatchResult(match) {
+  if (match.result_source !== "actual") {
+    return `<span class="result-source result-source--pending">Scheduled</span>`;
+  }
+  return `
+    <span class="schedule-result">
+      <strong>${match.actual_team1_goals}-${match.actual_team2_goals}</strong>
+      <span class="result-source result-source--actual">Final</span>
+    </span>
+  `;
 }
 
 function renderFixtureTeam(name) {

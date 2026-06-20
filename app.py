@@ -1,3 +1,6 @@
+import csv
+from pathlib import Path
+
 from flask import Flask, render_template
 
 from match_model import build_team_ratings
@@ -6,6 +9,7 @@ from schedule_data import MATCH_SCHEDULE
 app = Flask(__name__)
 
 LOGO_URL = "https://brandlogos.net/wp-content/uploads/2023/08/2026-FIFA-World-Cup-logo-512x789.png"
+RESULTS_PATH = Path(__file__).parent / "data" / "results.csv"
 
 WORLD_CUP_GROUPS = [
     {
@@ -213,12 +217,58 @@ def schedule_flag_lookup():
     return lookup
 
 
+def schedule_with_results():
+    """Attach a real score when the local results feed contains one."""
+    aliases = {
+        "bosnia & herzegovina": "bosnia and herzegovina",
+        "cabo verde": "cape verde",
+        "cote d'ivoire": "ivory coast",
+        "curaçao": "curacao",
+        "czechia": "czech republic",
+        "congo dr": "dr congo",
+        "ir iran": "iran",
+        "korea republic": "south korea",
+        "turkiye": "turkey",
+        "usa": "united states",
+    }
+
+    def normalized(name):
+        clean = name.strip().lower()
+        return aliases.get(clean, clean)
+
+    results = {}
+    with RESULTS_PATH.open(encoding="utf-8-sig", newline="") as result_file:
+        for row in csv.DictReader(result_file):
+            if row["home_score"] == "NA" or row["away_score"] == "NA":
+                continue
+            teams = frozenset((normalized(row["home_team"]), normalized(row["away_team"])))
+            results[(row["date"], teams)] = row
+
+    enriched = []
+    for fixture in MATCH_SCHEDULE:
+        match = dict(fixture)
+        teams = frozenset((normalized(fixture["team1"]), normalized(fixture["team2"])))
+        result = results.get((fixture["date"], teams))
+        if result:
+            home_score = int(result["home_score"])
+            away_score = int(result["away_score"])
+            if normalized(fixture["team1"]) == normalized(result["home_team"]):
+                match["actual_team1_goals"], match["actual_team2_goals"] = home_score, away_score
+            else:
+                match["actual_team1_goals"], match["actual_team2_goals"] = away_score, home_score
+            match["result_source"] = "actual"
+        else:
+            match["result_source"] = "model"
+        enriched.append(match)
+    return enriched
+
+
 @app.get("/")
 def index():
     return render_template(
         "index.html",
         groups=groups_with_flags(),
-        schedule=MATCH_SCHEDULE,
+        schedule=schedule_with_results(),
         logo_url=LOGO_URL,
     )
 
@@ -228,7 +278,7 @@ def guided():
     return render_template(
         "guided.html",
         groups=groups_with_flags(),
-        schedule=MATCH_SCHEDULE,
+        schedule=schedule_with_results(),
         logo_url=LOGO_URL,
     )
 
@@ -237,7 +287,18 @@ def guided():
 def schedule():
     return render_template(
         "schedule.html",
-        schedule=MATCH_SCHEDULE,
+        schedule=schedule_with_results(),
+        schedule_flags=schedule_flag_lookup(),
+        logo_url=LOGO_URL,
+    )
+
+
+@app.get("/results")
+def results():
+    return render_template(
+        "results.html",
+        groups=groups_with_flags(),
+        schedule=schedule_with_results(),
         schedule_flags=schedule_flag_lookup(),
         logo_url=LOGO_URL,
     )
