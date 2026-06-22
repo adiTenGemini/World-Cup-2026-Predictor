@@ -8,6 +8,8 @@ const searchInput = document.querySelector("#schedule-search");
 const clearButton = document.querySelector("#clear-schedule-filters");
 const scheduleBody = document.querySelector("#schedule-body");
 const scheduleCount = document.querySelector("#schedule-count");
+const refreshButton = document.querySelector("#refresh-results");
+const refreshStatus = document.querySelector("#refresh-status");
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local time";
 
 function uniqueValues(key) {
@@ -149,5 +151,26 @@ addOptions(venueFilter, uniqueValues("venue").sort());
   control.addEventListener("input", renderSchedule);
 });
 clearButton.addEventListener("click", clearFilters);
+refreshButton.addEventListener("click", async () => {
+  refreshButton.disabled = true;
+  refreshButton.classList.add("is-refreshing");
+  refreshStatus.className = "refresh-status";
+  refreshStatus.textContent = "Checking FotMob…";
+  try {
+    const response = await fetch("/api/results/refresh", { method: "POST", headers: { Accept: "application/json" } });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Results refresh failed.");
+    schedule.splice(0, schedule.length, ...payload.schedule);
+    renderSchedule();
+    refreshStatus.classList.add("is-success");
+    refreshStatus.textContent = payload.message;
+  } catch (error) {
+    refreshStatus.classList.add("is-error");
+    refreshStatus.textContent = error.message;
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.classList.remove("is-refreshing");
+  }
+});
 
 renderSchedule();

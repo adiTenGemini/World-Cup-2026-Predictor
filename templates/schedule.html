@@ -66,7 +66,14 @@
             <p class="eyebrow">Fixtures</p>
             <h2 id="schedule-list-title">Full match list</h2>
           </div>
-          <p id="schedule-count" class="schedule-count"></p>
+          <div class="results-refresh">
+            <p id="schedule-count" class="schedule-count"></p>
+            <button id="refresh-results" class="refresh-button" type="button" title="Fetch latest results from FotMob" aria-label="Fetch latest results from FotMob">
+              <span class="refresh-icon" aria-hidden="true">&#x21bb;</span>
+              <span>Refresh results</span>
+            </button>
+            <p id="refresh-status" class="refresh-status" role="status" aria-live="polite"></p>
+          </div>
         </div>
 
         <form class="schedule-filters" aria-label="Schedule filters">

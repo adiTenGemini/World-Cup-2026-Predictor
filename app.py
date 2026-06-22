@@ -1,15 +1,18 @@
 import csv
 from pathlib import Path
+from threading import Lock
 
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template
 
 from match_model import build_team_ratings
 from schedule_data import MATCH_SCHEDULE
+from update_world_cup_results import completed_matches, fetch_page, update_results
 
 app = Flask(__name__)
 
 LOGO_URL = "https://brandlogos.net/wp-content/uploads/2023/08/2026-FIFA-World-Cup-logo-512x789.png"
 RESULTS_PATH = Path(__file__).parent / "data" / "results.csv"
+RESULTS_REFRESH_LOCK = Lock()
 
 WORLD_CUP_GROUPS = [
     {
@@ -304,5 +307,26 @@ def results():
     )
 
 
+@app.post("/api/results/refresh")
+def refresh_results():
+    """Fetch completed World Cup matches and return the refreshed schedule."""
+    if not RESULTS_REFRESH_LOCK.acquire(blocking=False):
+        return jsonify(error="A results refresh is already running."), 409
+
+    try:
+        matches = completed_matches(fetch_page())
+        updated = update_results(matches)
+        return jsonify(
+            message=f"Synced {updated} completed match{'es' if updated != 1 else ''} from FotMob.",
+            updated=updated,
+            schedule=schedule_with_results(),
+        )
+    except Exception as error:
+        app.logger.exception("Unable to refresh results from FotMob")
+        return jsonify(error=f"Could not refresh FotMob results: {error}"), 502
+    finally:
+        RESULTS_REFRESH_LOCK.release()
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)

@@ -16,6 +16,8 @@ const sourceControl = document.querySelector("#results-source");
 const searchControl = document.querySelector("#results-search");
 const resultsBody = document.querySelector("#results-body");
 const resultsCount = document.querySelector("#results-count");
+const refreshButton = document.querySelector("#refresh-results");
+const refreshStatus = document.querySelector("#refresh-status");
 
 function resultScore(match) {
   if (match.result_source === "actual") return { text: `${match.actual_team1_goals}-${match.actual_team2_goals}`, source: "actual" };
@@ -65,4 +67,25 @@ addResultOptions(stageControl, resultsSchedule.map((match) => match.stage));
 addResultOptions(groupControl, resultsSchedule.map((match) => match.group), (group) => `Group ${group}`);
 [stageControl, groupControl, sourceControl, searchControl].forEach((control) => control.addEventListener("input", renderResults));
 document.querySelector("#clear-results-filters").addEventListener("click", () => { stageControl.value = ""; groupControl.value = ""; sourceControl.value = ""; searchControl.value = ""; renderResults(); });
+refreshButton.addEventListener("click", async () => {
+  refreshButton.disabled = true;
+  refreshButton.classList.add("is-refreshing");
+  refreshStatus.className = "refresh-status";
+  refreshStatus.textContent = "Checking FotMob…";
+  try {
+    const response = await fetch("/api/results/refresh", { method: "POST", headers: { Accept: "application/json" } });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Results refresh failed.");
+    resultsSchedule.splice(0, resultsSchedule.length, ...payload.schedule);
+    renderResults();
+    refreshStatus.classList.add("is-success");
+    refreshStatus.textContent = payload.message;
+  } catch (error) {
+    refreshStatus.classList.add("is-error");
+    refreshStatus.textContent = error.message;
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.classList.remove("is-refreshing");
+  }
+});
 renderResults();
