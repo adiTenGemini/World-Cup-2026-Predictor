@@ -1,10 +1,12 @@
 import csv
+import json
+import re
 from pathlib import Path
 from threading import Lock
 
 from flask import Flask, jsonify, render_template
 
-from match_model import build_team_ratings
+from match_model import build_team_ratings, poisson_expected_goals
 from schedule_data import MATCH_SCHEDULE
 from update_world_cup_results import completed_matches, fetch_page, update_results
 
@@ -12,6 +14,7 @@ app = Flask(__name__)
 
 LOGO_URL = "https://brandlogos.net/wp-content/uploads/2023/08/2026-FIFA-World-Cup-logo-512x789.png"
 RESULTS_PATH = Path(__file__).parent / "data" / "results.csv"
+FOTMOB_RESULTS_PATH = Path(__file__).parent / "data" / "world_cup_2026_fotmob_results.json"
 RESULTS_REFRESH_LOCK = Lock()
 
 WORLD_CUP_GROUPS = [
@@ -220,12 +223,12 @@ def schedule_flag_lookup():
     return lookup
 
 
-def schedule_with_results():
-    """Attach a real score when the local results feed contains one."""
+def normalized_team_name(name):
     aliases = {
         "bosnia & herzegovina": "bosnia and herzegovina",
         "cabo verde": "cape verde",
         "cote d'ivoire": "ivory coast",
+        "curaã§ao": "curacao",
         "curaçao": "curacao",
         "czechia": "czech republic",
         "congo dr": "dr congo",
@@ -234,31 +237,265 @@ def schedule_with_results():
         "turkiye": "turkey",
         "usa": "united states",
     }
+    clean = name.strip().lower()
+    return aliases.get(clean, clean)
 
-    def normalized(name):
-        clean = name.strip().lower()
-        return aliases.get(clean, clean)
 
+def fixture_results_by_key():
     results = {}
     with RESULTS_PATH.open(encoding="utf-8-sig", newline="") as result_file:
         for row in csv.DictReader(result_file):
             if row["home_score"] == "NA" or row["away_score"] == "NA":
                 continue
-            teams = frozenset((normalized(row["home_team"]), normalized(row["away_team"])))
+            teams = frozenset(
+                (normalized_team_name(row["home_team"]), normalized_team_name(row["away_team"]))
+            )
             results[(row["date"], teams)] = row
+            if row["tournament"] == "FIFA World Cup" and row["date"].startswith("2026-"):
+                results[("2026-world-cup", teams)] = row
+    return results
+
+
+def raw_fotmob_results():
+    if not FOTMOB_RESULTS_PATH.exists():
+        return []
+    with FOTMOB_RESULTS_PATH.open(encoding="utf-8") as result_file:
+        return json.load(result_file)
+
+
+def team_lookup(groups):
+    lookup = {}
+    for group in groups:
+        for team in group["teams"]:
+            lookup[normalized_team_name(team["name"])] = team
+    return lookup
+
+
+def score_for_fixture(fixture, teams_by_name, results):
+    teams = frozenset((normalized_team_name(fixture["team1"]), normalized_team_name(fixture["team2"])))
+    result = results.get((fixture["date"], teams)) or results.get(("2026-world-cup", teams))
+    if result:
+        home_score = int(result["home_score"])
+        away_score = int(result["away_score"])
+        if normalized_team_name(fixture["team1"]) == normalized_team_name(result["home_team"]):
+            return home_score, away_score, "actual"
+        return away_score, home_score, "actual"
+
+    team = teams_by_name.get(normalized_team_name(fixture["team1"]))
+    opponent = teams_by_name.get(normalized_team_name(fixture["team2"]))
+    if not team or not opponent:
+        return None
+
+    team_goals, opponent_goals = poisson_expected_goals(team["rating"], opponent["rating"])
+    return round(team_goals), round(opponent_goals), "model"
+
+
+def group_table(group, teams_by_name, results):
+    table = {
+        team["code"]: {
+            "team": team,
+            "played": 0,
+            "won": 0,
+            "drawn": 0,
+            "lost": 0,
+            "gf": 0,
+            "ga": 0,
+            "points": 0,
+        }
+        for team in group["teams"]
+    }
+
+    for fixture in MATCH_SCHEDULE:
+        if fixture["stage"] != "Group Stage" or fixture["group"] != group["id"]:
+            continue
+        team = teams_by_name.get(normalized_team_name(fixture["team1"]))
+        opponent = teams_by_name.get(normalized_team_name(fixture["team2"]))
+        score = score_for_fixture(fixture, teams_by_name, results)
+        if not team or not opponent or score is None:
+            continue
+        team_goals, opponent_goals, _source = score
+        home = table[team["code"]]
+        away = table[opponent["code"]]
+        home["played"] += 1
+        away["played"] += 1
+        home["gf"] += team_goals
+        home["ga"] += opponent_goals
+        away["gf"] += opponent_goals
+        away["ga"] += team_goals
+        if team_goals > opponent_goals:
+            home["won"] += 1
+            away["lost"] += 1
+            home["points"] += 3
+        elif team_goals < opponent_goals:
+            away["won"] += 1
+            home["lost"] += 1
+            away["points"] += 3
+        else:
+            home["drawn"] += 1
+            away["drawn"] += 1
+            home["points"] += 1
+            away["points"] += 1
+
+    return sorted(
+        ({**row, "gd": row["gf"] - row["ga"]} for row in table.values()),
+        key=lambda row: (row["points"], row["gd"], row["gf"], row["team"]["rating"]),
+        reverse=True,
+    )
+
+
+def third_place_assignments(thirds):
+    slots = [
+        {"key": "m74", "allowed": ["A", "B", "C", "D", "F"]},
+        {"key": "m77", "allowed": ["C", "D", "F", "G", "H"]},
+        {"key": "m79", "allowed": ["C", "E", "F", "H", "I"]},
+        {"key": "m80", "allowed": ["E", "H", "I", "J", "K"]},
+        {"key": "m81", "allowed": ["B", "E", "F", "I", "J"]},
+        {"key": "m82", "allowed": ["A", "E", "H", "I", "J"]},
+        {"key": "m85", "allowed": ["E", "F", "G", "I", "J"]},
+        {"key": "m87", "allowed": ["D", "E", "I", "J", "L"]},
+    ]
+
+    def search(index, used, assigned):
+        if index == len(slots):
+            return assigned
+        slot = slots[index]
+        candidates = [
+            team for team in thirds if team["seed"][0] in slot["allowed"] and team["code"] not in used
+        ]
+        for candidate in candidates:
+            solved = search(
+                index + 1,
+                used | {candidate["code"]},
+                {**assigned, slot["key"]: candidate},
+            )
+            if solved:
+                return solved
+        return None
+
+    return search(0, set(), {}) or {}
+
+
+def knockout_seed_lookup(groups, teams_by_name, results):
+    tables = {group["id"]: group_table(group, teams_by_name, results) for group in groups}
+    seeds = {}
+    thirds = []
+    for group_id, table in tables.items():
+        if len(table) < 3:
+            continue
+        seeds[f"1{group_id}"] = {**table[0]["team"], "seed": f"{group_id}1"}
+        seeds[f"2{group_id}"] = {**table[1]["team"], "seed": f"{group_id}2"}
+        thirds.append({**table[2], "team": {**table[2]["team"], "seed": f"{group_id}3"}})
+
+    best_thirds = sorted(
+        thirds,
+        key=lambda row: (row["points"], row["gd"], row["gf"], row["team"]["rating"]),
+        reverse=True,
+    )[:8]
+    third_assignments = third_place_assignments([row["team"] for row in best_thirds])
+    seeds.update(
+        {
+            "3A/B/C/D/F": third_assignments.get("m74"),
+            "3C/D/F/G/H": third_assignments.get("m77"),
+            "3C/E/F/H/I": third_assignments.get("m79"),
+            "3E/H/I/J/K": third_assignments.get("m80"),
+            "3B/E/F/I/J": third_assignments.get("m81"),
+            "3A/E/H/I/J": third_assignments.get("m82"),
+            "3E/F/G/I/J": third_assignments.get("m85"),
+            "3D/E/I/J/L": third_assignments.get("m87"),
+        }
+    )
+    return seeds
+
+
+def team_seed_lookup(groups, teams_by_name, results):
+    seeds = {}
+    for group in groups:
+        table = group_table(group, teams_by_name, results)
+        for index, row in enumerate(table[:3], start=1):
+            seeds[normalized_team_name(row["team"]["name"])] = f"{index}{group['id']}"
+    return seeds
+
+
+def slot_accepts_seed(slot, seed):
+    if not seed:
+        return False
+    if re.fullmatch(r"[12][A-L]", slot):
+        return slot == seed
+    if slot.startswith("3"):
+        return seed.startswith("3") and seed[1] in slot[1:].split("/")
+    return False
+
+
+def remap_fotmob_knockout_results(fotmob_results, team_seeds):
+    remapped = {}
+    used = set()
+    round32_fixtures = [
+        fixture
+        for fixture in MATCH_SCHEDULE
+        if fixture["stage"] == "Round of 32"
+    ]
+
+    for fixture in round32_fixtures:
+        for index, result in enumerate(fotmob_results):
+            if index in used:
+                continue
+            home_seed = team_seeds.get(normalized_team_name(result["home"]))
+            away_seed = team_seeds.get(normalized_team_name(result["away"]))
+            same_order = (
+                slot_accepts_seed(fixture["team1"], home_seed)
+                and slot_accepts_seed(fixture["team2"], away_seed)
+            )
+            reverse_order = (
+                slot_accepts_seed(fixture["team1"], away_seed)
+                and slot_accepts_seed(fixture["team2"], home_seed)
+            )
+            if same_order or reverse_order:
+                remapped[fixture["match"]] = result
+                used.add(index)
+                break
+
+    for result in fotmob_results:
+        if int(result.get("match", 0)) >= 89:
+            remapped[int(result["match"])] = result
+    return remapped
+
+
+def resolve_knockout_team(name, seeds):
+    if re.fullmatch(r"[12][A-L]", name) or name.startswith("3"):
+        team = seeds.get(name)
+        return team["name"] if team else name
+    return name
+
+
+def schedule_with_results():
+    """Attach a real score when the local results feed contains one."""
+    groups = groups_with_flags()
+    teams_by_name = team_lookup(groups)
+    results = fixture_results_by_key()
+    team_seeds = team_seed_lookup(groups, teams_by_name, results)
+    fotmob_results = remap_fotmob_knockout_results(raw_fotmob_results(), team_seeds)
+    seeds = knockout_seed_lookup(groups, teams_by_name, results)
 
     enriched = []
     for fixture in MATCH_SCHEDULE:
         match = dict(fixture)
-        teams = frozenset((normalized(fixture["team1"]), normalized(fixture["team2"])))
-        result = results.get((fixture["date"], teams))
-        if result:
-            home_score = int(result["home_score"])
-            away_score = int(result["away_score"])
-            if normalized(fixture["team1"]) == normalized(result["home_team"]):
-                match["actual_team1_goals"], match["actual_team2_goals"] = home_score, away_score
-            else:
-                match["actual_team1_goals"], match["actual_team2_goals"] = away_score, home_score
+        fotmob_result = fotmob_results.get(match["match"]) if match["match"] >= 73 else None
+        if fotmob_result:
+            match["team1"] = fotmob_result["home"]
+            match["team2"] = fotmob_result["away"]
+            match["actual_team1_goals"] = int(fotmob_result["home_score"])
+            match["actual_team2_goals"] = int(fotmob_result["away_score"])
+            match["result_source"] = "actual"
+            enriched.append(match)
+            continue
+
+        if fixture["stage"] != "Group Stage":
+            match["team1"] = resolve_knockout_team(fixture["team1"], seeds)
+            match["team2"] = resolve_knockout_team(fixture["team2"], seeds)
+
+        score = score_for_fixture(match, teams_by_name, results)
+        if score and score[2] == "actual":
+            match["actual_team1_goals"], match["actual_team2_goals"], _source = score
             match["result_source"] = "actual"
         else:
             match["result_source"] = "model"

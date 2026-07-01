@@ -57,6 +57,26 @@ function getQualifiers() {
   });
 }
 
+function rankedThirdPlaceTeams() {
+  const tableRowsByCode = new Map();
+  groups.forEach((group) => {
+    calculateGroupTable(group).forEach((row) => tableRowsByCode.set(row.team.code, row));
+  });
+  return getQualifiers()
+    .map((item) => {
+      const row = tableRowsByCode.get(item.third.code);
+      return {
+        ...row,
+        team: { ...item.third, seed: `${item.group}3` },
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf || b.team.rating - a.team.rating,
+    )
+    .map((row) => row.team);
+}
+
 function renderTeam(team) {
   if (!team) return `<span class="team"><span>-</span><span>Awaiting winner</span></span>`;
   return `
@@ -465,7 +485,13 @@ function getBracketRounds() {
   const qualifiers = getQualifiers();
   const groupWinners = qualifiers.map((item) => item.winner);
   const runnersUp = qualifiers.map((item) => item.runnerUp);
-  const thirdPlaceAssignments = getThirdPlaceAssignments(qualifiers.slice(0, 8).map((item) => item.third));
+  const thirdPlaceAssignments = getThirdPlaceAssignments(rankedThirdPlaceTeams().slice(0, 8));
+  const seedByCode = new Map();
+  qualifiers.forEach((item) => {
+    [item.winner, item.runnerUp, item.third].forEach((team) => {
+      seedByCode.set(team.code, team.seed);
+    });
+  });
 
   const round32Matches = [
     [runnersUp[0], runnersUp[1]],
@@ -485,6 +511,9 @@ function getBracketRounds() {
     [groupWinners[10], thirdPlaceAssignments.m87],
     [runnersUp[3], runnersUp[6]],
   ];
+  const officialRound32Matches = round32Matches.map((match, index) =>
+    officialScheduleMatch(73 + index, match, seedByCode),
+  );
 
   const round16Matches = [
     [winners.round32[1], winners.round32[4]],
@@ -512,11 +541,23 @@ function getBracketRounds() {
   const finalMatches = [[winners.semifinal[0], winners.semifinal[1]]];
 
   return [
-    { key: "round32", title: "Round of 32", matchStart: 73, matches: round32Matches },
+    { key: "round32", title: "Round of 32", matchStart: 73, matches: officialRound32Matches },
     { key: "round16", title: "Round of 16", matchStart: 89, matches: round16Matches },
     { key: "quarterfinal", title: "Quarter-finals", matchStart: 97, matches: quarterfinalMatches },
     { key: "semifinal", title: "Semi-finals", matchStart: 101, matches: semifinalMatches },
     { key: "final", title: "Final", matchStart: 104, matches: finalMatches },
+  ];
+}
+
+function officialScheduleMatch(matchNumber, fallbackMatch, seedByCode) {
+  const schedule = scheduleByMatch.get(matchNumber);
+  if (schedule?.result_source !== "actual") return fallbackMatch;
+  const team = teamsByName.get(schedule.team1);
+  const opponent = teamsByName.get(schedule.team2);
+  if (!team || !opponent) return fallbackMatch;
+  return [
+    { ...team, seed: seedByCode.get(team.code) || team.code },
+    { ...opponent, seed: seedByCode.get(opponent.code) || opponent.code },
   ];
 }
 

@@ -58,6 +58,10 @@ function renderResults() {
   }).join("") : `<tr><td class="empty-schedule" colspan="6">No results found.</td></tr>`;
 }
 
+function actualResultCount() {
+  return resultsSchedule.filter((match) => resultScore(match).source === "actual").length;
+}
+
 function addResultOptions(control, values, label = (value) => value) {
   [...new Set(values.filter(Boolean))].sort().forEach((value) => {
     const option = document.createElement("option"); option.value = value; option.textContent = label(value); control.appendChild(option);
@@ -78,6 +82,10 @@ refreshButton.addEventListener("click", async () => {
     if (!response.ok) throw new Error(payload.error || "Results refresh failed.");
     resultsSchedule.splice(0, resultsSchedule.length, ...payload.schedule);
     renderResults();
+    if (payload.updated > actualResultCount()) {
+      window.location.reload();
+      return;
+    }
     refreshStatus.classList.add("is-success");
     refreshStatus.textContent = payload.message;
   } catch (error) {

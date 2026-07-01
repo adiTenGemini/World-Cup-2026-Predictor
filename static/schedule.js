@@ -122,6 +122,10 @@ function renderMatchResult(match) {
   `;
 }
 
+function actualScheduleResultCount() {
+  return schedule.filter((match) => match.result_source === "actual").length;
+}
+
 function renderFixtureTeam(name) {
   const flagUrl = scheduleFlags[name];
   if (!flagUrl) {
@@ -162,6 +166,10 @@ refreshButton.addEventListener("click", async () => {
     if (!response.ok) throw new Error(payload.error || "Results refresh failed.");
     schedule.splice(0, schedule.length, ...payload.schedule);
     renderSchedule();
+    if (payload.updated > actualScheduleResultCount()) {
+      window.location.reload();
+      return;
+    }
     refreshStatus.classList.add("is-success");
     refreshStatus.textContent = payload.message;
   } catch (error) {

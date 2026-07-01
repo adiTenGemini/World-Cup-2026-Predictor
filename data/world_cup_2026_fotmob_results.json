@@ -1,0 +1,642 @@
+[
+  {
+    "away": "South Africa",
+    "away_score": 0,
+    "date": "2026-06-11",
+    "home": "Mexico",
+    "home_score": 2,
+    "match": 1
+  },
+  {
+    "away": "Czechia",
+    "away_score": 1,
+    "date": "2026-06-12",
+    "home": "South Korea",
+    "home_score": 2,
+    "match": 2
+  },
+  {
+    "away": "Bosnia and Herzegovina",
+    "away_score": 1,
+    "date": "2026-06-12",
+    "home": "Canada",
+    "home_score": 1,
+    "match": 3
+  },
+  {
+    "away": "Paraguay",
+    "away_score": 1,
+    "date": "2026-06-13",
+    "home": "USA",
+    "home_score": 4,
+    "match": 4
+  },
+  {
+    "away": "Switzerland",
+    "away_score": 1,
+    "date": "2026-06-13",
+    "home": "Qatar",
+    "home_score": 1,
+    "match": 5
+  },
+  {
+    "away": "Morocco",
+    "away_score": 1,
+    "date": "2026-06-13",
+    "home": "Brazil",
+    "home_score": 1,
+    "match": 6
+  },
+  {
+    "away": "Scotland",
+    "away_score": 1,
+    "date": "2026-06-14",
+    "home": "Haiti",
+    "home_score": 0,
+    "match": 7
+  },
+  {
+    "away": "Turkiye",
+    "away_score": 0,
+    "date": "2026-06-14",
+    "home": "Australia",
+    "home_score": 2,
+    "match": 8
+  },
+  {
+    "away": "Curacao",
+    "away_score": 1,
+    "date": "2026-06-14",
+    "home": "Germany",
+    "home_score": 7,
+    "match": 9
+  },
+  {
+    "away": "Japan",
+    "away_score": 2,
+    "date": "2026-06-14",
+    "home": "Netherlands",
+    "home_score": 2,
+    "match": 10
+  },
+  {
+    "away": "Ecuador",
+    "away_score": 0,
+    "date": "2026-06-14",
+    "home": "Ivory Coast",
+    "home_score": 1,
+    "match": 11
+  },
+  {
+    "away": "Tunisia",
+    "away_score": 1,
+    "date": "2026-06-15",
+    "home": "Sweden",
+    "home_score": 5,
+    "match": 12
+  },
+  {
+    "away": "Cape Verde",
+    "away_score": 0,
+    "date": "2026-06-15",
+    "home": "Spain",
+    "home_score": 0,
+    "match": 13
+  },
+  {
+    "away": "Egypt",
+    "away_score": 1,
+    "date": "2026-06-15",
+    "home": "Belgium",
+    "home_score": 1,
+    "match": 14
+  },
+  {
+    "away": "Uruguay",
+    "away_score": 1,
+    "date": "2026-06-15",
+    "home": "Saudi Arabia",
+    "home_score": 1,
+    "match": 15
+  },
+  {
+    "away": "New Zealand",
+    "away_score": 2,
+    "date": "2026-06-16",
+    "home": "Iran",
+    "home_score": 2,
+    "match": 16
+  },
+  {
+    "away": "Senegal",
+    "away_score": 1,
+    "date": "2026-06-16",
+    "home": "France",
+    "home_score": 3,
+    "match": 17
+  },
+  {
+    "away": "Norway",
+    "away_score": 4,
+    "date": "2026-06-16",
+    "home": "Iraq",
+    "home_score": 1,
+    "match": 18
+  },
+  {
+    "away": "Algeria",
+    "away_score": 0,
+    "date": "2026-06-17",
+    "home": "Argentina",
+    "home_score": 3,
+    "match": 19
+  },
+  {
+    "away": "Jordan",
+    "away_score": 1,
+    "date": "2026-06-17",
+    "home": "Austria",
+    "home_score": 3,
+    "match": 20
+  },
+  {
+    "away": "DR Congo",
+    "away_score": 1,
+    "date": "2026-06-17",
+    "home": "Portugal",
+    "home_score": 1,
+    "match": 21
+  },
+  {
+    "away": "Croatia",
+    "away_score": 2,
+    "date": "2026-06-17",
+    "home": "England",
+    "home_score": 4,
+    "match": 22
+  },
+  {
+    "away": "Panama",
+    "away_score": 0,
+    "date": "2026-06-17",
+    "home": "Ghana",
+    "home_score": 1,
+    "match": 23
+  },
+  {
+    "away": "Colombia",
+    "away_score": 3,
+    "date": "2026-06-18",
+    "home": "Uzbekistan",
+    "home_score": 1,
+    "match": 24
+  },
+  {
+    "away": "South Africa",
+    "away_score": 1,
+    "date": "2026-06-18",
+    "home": "Czechia",
+    "home_score": 1,
+    "match": 25
+  },
+  {
+    "away": "Bosnia and Herzegovina",
+    "away_score": 1,
+    "date": "2026-06-18",
+    "home": "Switzerland",
+    "home_score": 4,
+    "match": 26
+  },
+  {
+    "away": "Qatar",
+    "away_score": 0,
+    "date": "2026-06-18",
+    "home": "Canada",
+    "home_score": 6,
+    "match": 27
+  },
+  {
+    "away": "South Korea",
+    "away_score": 0,
+    "date": "2026-06-19",
+    "home": "Mexico",
+    "home_score": 1,
+    "match": 28
+  },
+  {
+    "away": "Australia",
+    "away_score": 0,
+    "date": "2026-06-19",
+    "home": "USA",
+    "home_score": 2,
+    "match": 29
+  },
+  {
+    "away": "Morocco",
+    "away_score": 1,
+    "date": "2026-06-19",
+    "home": "Scotland",
+    "home_score": 0,
+    "match": 30
+  },
+  {
+    "away": "Haiti",
+    "away_score": 0,
+    "date": "2026-06-20",
+    "home": "Brazil",
+    "home_score": 3,
+    "match": 31
+  },
+  {
+    "away": "Paraguay",
+    "away_score": 1,
+    "date": "2026-06-20",
+    "home": "Turkiye",
+    "home_score": 0,
+    "match": 32
+  },
+  {
+    "away": "Sweden",
+    "away_score": 1,
+    "date": "2026-06-20",
+    "home": "Netherlands",
+    "home_score": 5,
+    "match": 33
+  },
+  {
+    "away": "Ivory Coast",
+    "away_score": 1,
+    "date": "2026-06-20",
+    "home": "Germany",
+    "home_score": 2,
+    "match": 34
+  },
+  {
+    "away": "Curacao",
+    "away_score": 0,
+    "date": "2026-06-21",
+    "home": "Ecuador",
+    "home_score": 0,
+    "match": 35
+  },
+  {
+    "away": "Japan",
+    "away_score": 4,
+    "date": "2026-06-21",
+    "home": "Tunisia",
+    "home_score": 0,
+    "match": 36
+  },
+  {
+    "away": "Saudi Arabia",
+    "away_score": 0,
+    "date": "2026-06-21",
+    "home": "Spain",
+    "home_score": 4,
+    "match": 37
+  },
+  {
+    "away": "Iran",
+    "away_score": 0,
+    "date": "2026-06-21",
+    "home": "Belgium",
+    "home_score": 0,
+    "match": 38
+  },
+  {
+    "away": "Cape Verde",
+    "away_score": 2,
+    "date": "2026-06-21",
+    "home": "Uruguay",
+    "home_score": 2,
+    "match": 39
+  },
+  {
+    "away": "Egypt",
+    "away_score": 3,
+    "date": "2026-06-22",
+    "home": "New Zealand",
+    "home_score": 1,
+    "match": 40
+  },
+  {
+    "away": "Austria",
+    "away_score": 0,
+    "date": "2026-06-22",
+    "home": "Argentina",
+    "home_score": 2,
+    "match": 41
+  },
+  {
+    "away": "Iraq",
+    "away_score": 0,
+    "date": "2026-06-22",
+    "home": "France",
+    "home_score": 3,
+    "match": 42
+  },
+  {
+    "away": "Senegal",
+    "away_score": 2,
+    "date": "2026-06-23",
+    "home": "Norway",
+    "home_score": 3,
+    "match": 43
+  },
+  {
+    "away": "Algeria",
+    "away_score": 2,
+    "date": "2026-06-23",
+    "home": "Jordan",
+    "home_score": 1,
+    "match": 44
+  },
+  {
+    "away": "Uzbekistan",
+    "away_score": 0,
+    "date": "2026-06-23",
+    "home": "Portugal",
+    "home_score": 5,
+    "match": 45
+  },
+  {
+    "away": "Ghana",
+    "away_score": 0,
+    "date": "2026-06-23",
+    "home": "England",
+    "home_score": 0,
+    "match": 46
+  },
+  {
+    "away": "Croatia",
+    "away_score": 1,
+    "date": "2026-06-23",
+    "home": "Panama",
+    "home_score": 0,
+    "match": 47
+  },
+  {
+    "away": "DR Congo",
+    "away_score": 0,
+    "date": "2026-06-24",
+    "home": "Colombia",
+    "home_score": 1,
+    "match": 48
+  },
+  {
+    "away": "Qatar",
+    "away_score": 1,
+    "date": "2026-06-24",
+    "home": "Bosnia and Herzegovina",
+    "home_score": 3,
+    "match": 49
+  },
+  {
+    "away": "Canada",
+    "away_score": 1,
+    "date": "2026-06-24",
+    "home": "Switzerland",
+    "home_score": 2,
+    "match": 50
+  },
+  {
+    "away": "Haiti",
+    "away_score": 2,
+    "date": "2026-06-24",
+    "home": "Morocco",
+    "home_score": 4,
+    "match": 51
+  },
+  {
+    "away": "Brazil",
+    "away_score": 3,
+    "date": "2026-06-24",
+    "home": "Scotland",
+    "home_score": 0,
+    "match": 52
+  },
+  {
+    "away": "Mexico",
+    "away_score": 3,
+    "date": "2026-06-25",
+    "home": "Czechia",
+    "home_score": 0,
+    "match": 53
+  },
+  {
+    "away": "South Korea",
+    "away_score": 0,
+    "date": "2026-06-25",
+    "home": "South Africa",
+    "home_score": 1,
+    "match": 54
+  },
+  {
+    "away": "Ivory Coast",
+    "away_score": 2,
+    "date": "2026-06-25",
+    "home": "Curacao",
+    "home_score": 0,
+    "match": 55
+  },
+  {
+    "away": "Germany",
+    "away_score": 1,
+    "date": "2026-06-25",
+    "home": "Ecuador",
+    "home_score": 2,
+    "match": 56
+  },
+  {
+    "away": "Sweden",
+    "away_score": 1,
+    "date": "2026-06-25",
+    "home": "Japan",
+    "home_score": 1,
+    "match": 57
+  },
+  {
+    "away": "Netherlands",
+    "away_score": 3,
+    "date": "2026-06-25",
+    "home": "Tunisia",
+    "home_score": 1,
+    "match": 58
+  },
+  {
+    "away": "Australia",
+    "away_score": 0,
+    "date": "2026-06-26",
+    "home": "Paraguay",
+    "home_score": 0,
+    "match": 59
+  },
+  {
+    "away": "USA",
+    "away_score": 2,
+    "date": "2026-06-26",
+    "home": "Turkiye",
+    "home_score": 3,
+    "match": 60
+  },
+  {
+    "away": "France",
+    "away_score": 4,
+    "date": "2026-06-26",
+    "home": "Norway",
+    "home_score": 1,
+    "match": 61
+  },
+  {
+    "away": "Iraq",
+    "away_score": 0,
+    "date": "2026-06-26",
+    "home": "Senegal",
+    "home_score": 5,
+    "match": 62
+  },
+  {
+    "away": "Saudi Arabia",
+    "away_score": 0,
+    "date": "2026-06-27",
+    "home": "Cape Verde",
+    "home_score": 0,
+    "match": 63
+  },
+  {
+    "away": "Spain",
+    "away_score": 1,
+    "date": "2026-06-27",
+    "home": "Uruguay",
+    "home_score": 0,
+    "match": 64
+  },
+  {
+    "away": "Iran",
+    "away_score": 1,
+    "date": "2026-06-27",
+    "home": "Egypt",
+    "home_score": 1,
+    "match": 65
+  },
+  {
+    "away": "Belgium",
+    "away_score": 5,
+    "date": "2026-06-27",
+    "home": "New Zealand",
+    "home_score": 1,
+    "match": 66
+  },
+  {
+    "away": "Ghana",
+    "away_score": 1,
+    "date": "2026-06-27",
+    "home": "Croatia",
+    "home_score": 2,
+    "match": 67
+  },
+  {
+    "away": "England",
+    "away_score": 2,
+    "date": "2026-06-27",
+    "home": "Panama",
+    "home_score": 0,
+    "match": 68
+  },
+  {
+    "away": "Portugal",
+    "away_score": 0,
+    "date": "2026-06-27",
+    "home": "Colombia",
+    "home_score": 0,
+    "match": 69
+  },
+  {
+    "away": "Uzbekistan",
+    "away_score": 1,
+    "date": "2026-06-27",
+    "home": "DR Congo",
+    "home_score": 3,
+    "match": 70
+  },
+  {
+    "away": "Austria",
+    "away_score": 3,
+    "date": "2026-06-28",
+    "home": "Algeria",
+    "home_score": 3,
+    "match": 71
+  },
+  {
+    "away": "Argentina",
+    "away_score": 3,
+    "date": "2026-06-28",
+    "home": "Jordan",
+    "home_score": 1,
+    "match": 72
+  },
+  {
+    "away": "Canada",
+    "away_score": 1,
+    "date": "2026-06-28",
+    "home": "South Africa",
+    "home_score": 0,
+    "match": 73
+  },
+  {
+    "away": "Japan",
+    "away_score": 1,
+    "date": "2026-06-29",
+    "home": "Brazil",
+    "home_score": 2,
+    "match": 74
+  },
+  {
+    "away": "Paraguay",
+    "away_score": 1,
+    "date": "2026-06-29",
+    "home": "Germany",
+    "home_score": 1,
+    "match": 75
+  },
+  {
+    "away": "Morocco",
+    "away_score": 1,
+    "date": "2026-06-30",
+    "home": "Netherlands",
+    "home_score": 1,
+    "match": 76
+  },
+  {
+    "away": "Norway",
+    "away_score": 2,
+    "date": "2026-06-30",
+    "home": "Ivory Coast",
+    "home_score": 1,
+    "match": 77
+  },
+  {
+    "away": "Sweden",
+    "away_score": 0,
+    "date": "2026-06-30",
+    "home": "France",
+    "home_score": 3,
+    "match": 78
+  },
+  {
+    "away": "Ecuador",
+    "away_score": 0,
+    "date": "2026-07-01",
+    "home": "Mexico",
+    "home_score": 2,
+    "match": 79
+  },
+  {
+    "away": "DR Congo",
+    "away_score": 1,
+    "date": "2026-07-01",
+    "home": "England",
+    "home_score": 2,
+    "match": 80
+  }
+]

@@ -86,40 +86,60 @@ function predictedWinner(team, opponent) {
 }
 
 function simulateGroup(group) {
-  const points = new Map(group.teams.map((team) => [team.code, 0]));
+  groupState.set(
+    group.id,
+    calculateGroupTable(group).map((row) => row.team),
+  );
+}
+
+function calculateGroupTable(group) {
+  const table = new Map(
+    group.teams.map((team) => [
+      team.code,
+      { team, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 },
+    ]),
+  );
   matchSchedule
     .filter((match) => match.stage === "Group Stage" && match.group === group.id)
     .forEach((match) => {
       const team = teamsByName.get(match.team1);
       const opponent = teamsByName.get(match.team2);
-      const score = scoreForMatch(match.match, team, opponent);
       if (!team || !opponent) return;
-      if (score.teamGoals > score.opponentGoals) points.set(team.code, points.get(team.code) + 3);
-      else if (score.teamGoals < score.opponentGoals) points.set(opponent.code, points.get(opponent.code) + 3);
-      else {
-        points.set(team.code, points.get(team.code) + 1);
-        points.set(opponent.code, points.get(opponent.code) + 1);
+      const score = scoreForMatch(match.match, team, opponent);
+      const home = table.get(team.code);
+      const away = table.get(opponent.code);
+      home.played += 1;
+      away.played += 1;
+      home.gf += score.teamGoals;
+      home.ga += score.opponentGoals;
+      away.gf += score.opponentGoals;
+      away.ga += score.teamGoals;
+      if (score.teamGoals > score.opponentGoals) {
+        home.won += 1;
+        away.lost += 1;
+        home.points += 3;
+      } else if (score.teamGoals < score.opponentGoals) {
+        away.won += 1;
+        home.lost += 1;
+        away.points += 3;
+      } else {
+        home.drawn += 1;
+        away.drawn += 1;
+        home.points += 1;
+        away.points += 1;
       }
     });
-  const standings = [...group.teams]
-    .map((team) => ({
-      team,
-      score: points.get(team.code),
-    }))
-    .sort((a, b) => b.score - a.score || b.team.rating - a.team.rating)
-    .map((item) => item.team);
-  groupState.set(group.id, standings);
+
+  return [...table.values()]
+    .map((row) => ({ ...row, gd: row.gf - row.ga }))
+    .sort(
+      (a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf || b.team.rating - a.team.rating,
+    );
 }
 
 function simulateThirdPlaceOrder() {
-  thirdPlaceOrder = getQualifiers()
-    .map((item) => item.third)
-    .map((team) => ({
-      team,
-      score: team.rating,
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((item) => item.team);
+  thirdPlaceOrder = rankedThirdPlaceTeams();
 }
 
 function simulateAll() {
@@ -342,7 +362,8 @@ function getThirdPlaceTeams() {
   const currentThirds = getQualifiers().map((item) => item.third);
   const currentCodes = new Set(currentThirds.map((team) => team.code));
   const keptOrder = thirdPlaceOrder.filter((team) => currentCodes.has(team.code));
-  const missing = currentThirds.filter((team) => !keptOrder.some((item) => item.code === team.code));
+  const rankedThirds = rankedThirdPlaceTeams();
+  const missing = rankedThirds.filter((team) => !keptOrder.some((item) => item.code === team.code));
   thirdPlaceOrder = [...keptOrder, ...missing];
   return thirdPlaceOrder;
 }
@@ -351,11 +372,37 @@ function getBestThirds() {
   return getThirdPlaceTeams().slice(0, 8);
 }
 
+function rankedThirdPlaceTeams() {
+  const tableRowsByCode = new Map();
+  groups.forEach((group) => {
+    calculateGroupTable(group).forEach((row) => tableRowsByCode.set(row.team.code, row));
+  });
+  return getQualifiers()
+    .map((item) => {
+      const row = tableRowsByCode.get(item.third.code);
+      return {
+        ...row,
+        team: { ...item.third, seed: `${item.group}3` },
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf || b.team.rating - a.team.rating,
+    )
+    .map((row) => row.team);
+}
+
 function getBracketRounds() {
   const qualifiers = getQualifiers();
   const groupWinners = qualifiers.map((item) => item.winner);
   const runnersUp = qualifiers.map((item) => item.runnerUp);
   const thirdPlaceAssignments = getThirdPlaceAssignments(getBestThirds());
+  const seedByCode = new Map();
+  qualifiers.forEach((item) => {
+    [item.winner, item.runnerUp, item.third].forEach((team) => {
+      seedByCode.set(team.code, team.seed);
+    });
+  });
 
   const round32Matches = [
     [runnersUp[0], runnersUp[1]],
@@ -375,6 +422,9 @@ function getBracketRounds() {
     [groupWinners[10], thirdPlaceAssignments.m87],
     [runnersUp[3], runnersUp[6]],
   ];
+  const officialRound32Matches = round32Matches.map((match, index) =>
+    officialScheduleMatch(73 + index, match, seedByCode),
+  );
 
   const round16Matches = [
     [winners.round32[1], winners.round32[4]],
@@ -396,12 +446,24 @@ function getBracketRounds() {
   const finalMatches = pairWinners("semifinal", 1);
 
   return {
-    round32: { title: "Round of 32", matchStart: 73, matches: round32Matches },
+    round32: { title: "Round of 32", matchStart: 73, matches: officialRound32Matches },
     round16: { title: "Round of 16", matchStart: 89, matches: round16Matches },
     quarterfinal: { title: "Quarter-finals", matchStart: 97, matches: quarterfinalMatches },
     semifinal: { title: "Semi-finals", matchStart: 101, matches: semifinalMatches },
     final: { title: "Final", matchStart: 104, matches: finalMatches },
   };
+}
+
+function officialScheduleMatch(matchNumber, fallbackMatch, seedByCode) {
+  const schedule = scheduleByMatch.get(matchNumber);
+  if (schedule?.result_source !== "actual") return fallbackMatch;
+  const team = teamsByName.get(schedule.team1);
+  const opponent = teamsByName.get(schedule.team2);
+  if (!team || !opponent) return fallbackMatch;
+  return [
+    { ...team, seed: seedByCode.get(team.code) || team.code },
+    { ...opponent, seed: seedByCode.get(opponent.code) || opponent.code },
+  ];
 }
 
 function getThirdPlaceAssignments(bestThirds) {
